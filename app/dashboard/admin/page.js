@@ -20,6 +20,7 @@ const AdminDashboardPage = () => {
         title: '',
         description: '',
         image: 'https://placehold.co/600x400/e2e8f0/334155?text=Service',
+        price: 0,
     });
 
     useEffect(() => {
@@ -103,7 +104,10 @@ const AdminDashboardPage = () => {
 
     const handleNewFeaturedChange = (e) => {
         const { name, value } = e.target;
-        setNewFeatured((prev) => ({ ...prev, [name]: value }));
+        setNewFeatured((prev) => ({
+            ...prev,
+            [name]: name === 'price' ? Number(value) : value,
+        }));
     };
 
     const handleAddFeatured = () => {
@@ -117,6 +121,7 @@ const AdminDashboardPage = () => {
                 title: '',
                 description: '',
                 image: 'https://placehold.co/600x400/e2e8f0/334155?text=Service',
+                price: 0,
             });
         } else {
             alert('Please fill in at least a title and description for the featured service.');
@@ -284,7 +289,7 @@ const AdminDashboardPage = () => {
                         <div className="space-y-2 mb-4">
                             {formData.featured.map((item) => (
                                 <div key={item.id} className="flex justify-between items-center p-2 border border-gray-200 rounded-md bg-gray-50">
-                                    <span>{item.id}: {item.title}</span>
+                                    <span>{item.id}: {item.title} · ৳{item.price || 0}</span>
                                     <button
                                         type="button"
                                         className={removeButtonClasses}
@@ -318,6 +323,18 @@ const AdminDashboardPage = () => {
                                     name="description"
                                     placeholder="e.g., 'Professional AC maintenance'"
                                     value={newFeatured.description}
+                                    onChange={handleNewFeaturedChange}
+                                    className={inputClasses}
+                                />
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Price</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    name="price"
+                                    placeholder="e.g., 1500"
+                                    value={newFeatured.price}
                                     onChange={handleNewFeaturedChange}
                                     className={inputClasses}
                                 />

@@ -47,14 +47,14 @@ export default function ChatWidget() {
         <div className="fixed bottom-4 right-4 z-50">
             {isOpen ? (
                 <div className="w-80 bg-white shadow-xl rounded-2xl border border-slate-200 overflow-hidden">
-                    <div className="flex items-center justify-between bg-slate-900 px-4 py-3">
+                    <div className="flex items-center justify-between bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 px-4 py-3">
                         <div>
                             <p className="text-sm font-semibold text-white">HomeEase Chat</p>
-                            <p className="text-xs text-slate-300">Ask about services, booking, and pricing.</p>
+                            <p className="text-xs text-white/80">Ask about services, booking, and pricing.</p>
                         </div>
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="text-white rounded-full bg-slate-700 p-2 hover:bg-slate-600"
+                            className="text-white rounded-full bg-white/20 p-2 hover:bg-white/30"
                             aria-label="Close chat"
                         >
                             ×
@@ -96,7 +96,7 @@ export default function ChatWidget() {
             ) : (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-blue-700"
+                    className="flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:opacity-95"
                     aria-label="Open chat"
                 >
                     <span className="text-lg">💬</span>

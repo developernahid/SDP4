@@ -92,6 +92,17 @@ const BookedOrdersPage = () => {
         }
     };
 
+    const handlePaymentStatusChange = async (bookingId, paymentStatus) => {
+        try {
+            const response = await axios.put(`/api/bookings/${bookingId}`, { paymentStatus });
+            if (response.status === 200) {
+                setBookings(bookings.map((b) => b._id === bookingId ? { ...b, ...response.data } : b));
+            }
+        } catch (error) {
+            console.error('Failed to update payment status:', error);
+        }
+    };
+
     const handleReviewChange = (bookingId, field, value) => {
         setReviewData((prev) => ({ ...prev, [bookingId]: { ...(prev[bookingId] || {}), [field]: value } }));
     };
@@ -139,9 +150,22 @@ const BookedOrdersPage = () => {
                                 <p><strong>Location:</strong> {booking.location}</p>
                                 <p><strong>Contact:</strong> {booking.contact}</p>
                                 <p><strong>Comment:</strong> {booking.comment}</p>
+                                <p><strong>Amount:</strong> {booking.amount ? `${booking.amount} BDT` : 'Contact for price'}</p>
                                 <p><strong>Status:</strong> {booking.status}</p>
                                 <p><strong>Payment:</strong> {booking.paymentStatus}</p>
-                                <p><strong>Assigned provider:</strong> {booking.providerName || 'Not assigned'}</p>
+                                <div className="mt-2">
+                                    <label className="text-sm font-medium">Payment status</label>
+                                    <select
+                                        value={booking.paymentStatus}
+                                        onChange={(e) => handlePaymentStatusChange(booking._id, e.target.value)}
+                                        className="mt-1 w-full p-2 border rounded"
+                                    >
+                                        <option value="Pending">Pending</option>
+                                        <option value="Paid">Paid</option>
+                                        <option value="Failed">Failed</option>
+                                    </select>
+                                </div>
+                                <p className="mt-2"><strong>Assigned provider:</strong> {booking.providerName || 'Not assigned'}</p>
                                 <select
                                     value={providerSelection[booking._id] || booking.providerId || ''}
                                     onChange={(e) => handleProviderSelect(booking._id, e.target.value)}
@@ -171,6 +195,7 @@ const BookedOrdersPage = () => {
                                 <p><strong>Location:</strong> {booking.location}</p>
                                 <p><strong>Contact:</strong> {booking.contact}</p>
                                 <p><strong>Comment:</strong> {booking.comment}</p>
+                                <p><strong>Amount:</strong> {booking.amount ? `${booking.amount} BDT` : 'Contact for price'}</p>
                                 <p><strong>Status:</strong> {booking.status}</p>
                                 <p><strong>Payment:</strong> {booking.paymentStatus}</p>
                                 {booking.status === 'Completed' && !booking.reviewed && (

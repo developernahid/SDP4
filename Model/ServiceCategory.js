@@ -19,6 +19,10 @@ const FeaturedServiceSchema = new Schema({
     image: {
         type: String,
         required: true
+    },
+    price: {
+        type: Number,
+        default: 0,
     }
 }, { _id: false }); // We use the 'id' field, so we can disable the default '_id' for sub-documents
 

@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import connect from '@/utils/db';
+import { ServiceCategory } from '@/Model/ServiceCategory';
 
 export const runtime = 'nodejs';
 
 let lastInteractionId;
 
-const buildSystemPrompt = (serviceList) => `You are a customer support assistant for a home appliance service company.
-Here are our current services and prices:
+const buildSystemPrompt = (serviceList) => `You are a customer support assistant for HomeEase, a home services platform.
+Use the website information and service list below to answer questions about services, pricing, booking, team, and contact.
+Available pages: Home, Services, Providers, About, Contact, Dashboard.
+Current services:
 ${serviceList}
 
-Use this info to answer pricing/service questions accurately. If unsure, ask the user to contact support.`;
+If asked about contact or support, direct the user to the Contact page or support email. If unsure, ask the user to contact support.`;
 
 const buildConversationText = (messages) =>
     messages
@@ -28,12 +32,17 @@ export const POST = async (request) => {
             return NextResponse.json({ message: 'Messages are required' }, { status: 400 });
         }
 
+        await connect();
         const client = await clientPromise;
         const dbName = process.env.MONGODB_DB || 'HomeEase';
         const db = client.db(dbName);
-        const services = await db.collection('services').find({}).toArray();
-        const serviceList = services
-            .map((service) => `${service.name} - ৳${service.price}`)
+        const rawServices = await db.collection('services').find({}).toArray().catch(() => []);
+        const categories = await ServiceCategory.find({}).lean().catch(() => []);
+        const serviceList = [
+            ...rawServices.map((service) => `${service.name || service.title || 'Service'} - ৳${service.price ?? 0}`),
+            ...categories.flatMap((category) => (category.featured || []).map((service) => `${service.title} - ৳${service.price ?? 0}`)),
+        ]
+            .filter(Boolean)
             .join('\n') || 'No services are currently available.';
 
         const systemPrompt = buildSystemPrompt(serviceList);

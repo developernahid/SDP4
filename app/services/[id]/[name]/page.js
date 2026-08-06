@@ -27,7 +27,11 @@ const DetailsPage = ({ params }) => {
         fetchData();
     }, [Service, resolvedParams.id]);
 
-
+    useEffect(() => {
+        if (data) {
+            setForm((prev) => ({ ...prev, amount: data.price || 0 }));
+        }
+    }, [data]);
 
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState({
@@ -37,6 +41,7 @@ const DetailsPage = ({ params }) => {
         contact: '',
         comment: '',
         status: 'Pending',
+        amount: 0,
     });
 
     useEffect(() => {
@@ -55,14 +60,27 @@ const DetailsPage = ({ params }) => {
         setForm((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Replace with actual booking logic / API call
-        const bookedData = { service: data, ...form };
-        axios.post('/api/bookings', bookedData);
-        setShowModal(false);
-        // Optionally reset form:
-        setForm({ name: '', email: '', location: '', contact: '', comment: '' });
+        const bookedData = {
+            service: data,
+            name: form.name,
+            email: form.email,
+            location: form.location,
+            contact: form.contact,
+            comment: form.comment,
+            status: form.status,
+            amount: data?.price || form.amount || 0,
+            paymentStatus: 'Pending',
+        };
+        try {
+            await axios.post('/api/bookings', bookedData);
+            setShowModal(false);
+            setForm((prev) => ({ ...prev, location: '', contact: '', comment: '', amount: data?.price || 0 }));
+        } catch (error) {
+            console.error('Booking failed:', error);
+            alert('Unable to submit booking. Please try again.');
+        }
     };
 
     return (
@@ -213,6 +231,11 @@ const DetailsPage = ({ params }) => {
                             <div>
                                 <label className="block text-xs text-gray-600 mb-1">Contact No</label>
                                 <input name="contact" value={form.contact} onChange={handleChange} className="w-full border rounded px-3 py-2 text-sm" />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-gray-600 mb-1">Price</label>
+                                <input value={data?.price ? `${data.price} BDT` : 'Contact for price'} readOnly className="w-full border rounded px-3 py-2 text-sm bg-slate-50" />
                             </div>
 
                             <div>
