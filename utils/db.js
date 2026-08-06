@@ -1,8 +1,13 @@
 import mongoose from "mongoose";
 
 const connect = async () => {
-    const uri = "mongodb+srv://nahid143:nahid420420@cluster0.urqrhir.mongodb.net/"
-    await mongoose.connect(uri)
-}
+    const uri = process.env.MONGODB_URI;
+
+    if (!uri) {
+        throw new Error("MONGODB_URI is not defined");
+    }
+
+    await mongoose.connect(uri);
+};
 
 export default connect

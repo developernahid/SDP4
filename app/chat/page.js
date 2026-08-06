@@ -4,12 +4,15 @@ import { useState } from 'react';
 
 export default function ChatPage() {
     const [input, setInput] = useState('');
-    const [messages, setMessages] = useState([{ role: 'system', content: 'Welcome to the HomeEase assistant. Ask anything about bookings, providers, or payments.' }]);
+    const [messages, setMessages] = useState([
+        { role: 'assistant', content: 'Welcome to the HomeEase assistant. Ask anything about bookings, providers, or payments.' },
+    ]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const sendMessage = async () => {
         if (!input.trim()) return;
+
         setLoading(true);
         setError('');
         const userMessage = { role: 'user', content: input.trim() };
@@ -21,11 +24,11 @@ export default function ChatPage() {
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: input.trim() }),
+                body: JSON.stringify({ messages: nextMessages }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Chat failed');
-            setMessages((prev) => [...prev, { role: 'assistant', content: data.answer }]);
+            setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
         } catch (err) {
             setError(err.message || 'Unexpected error');
             setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, I could not answer that right now.' }]);
@@ -42,7 +45,10 @@ export default function ChatPage() {
 
                 <div className="space-y-4">
                     {messages.map((message, index) => (
-                        <div key={index} className={`rounded-3xl p-4 ${message.role === 'assistant' ? 'bg-violet-50' : message.role === 'user' ? 'bg-slate-100' : 'bg-slate-200'} `}>
+                        <div
+                            key={index}
+                            className={`rounded-3xl p-4 ${message.role === 'assistant' ? 'bg-violet-50' : 'bg-slate-100'}`}
+                        >
                             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 mb-2">{message.role}</p>
                             <p className="text-sm text-slate-800 whitespace-pre-line">{message.content}</p>
                         </div>
@@ -54,6 +60,11 @@ export default function ChatPage() {
                         className="flex-1 rounded-3xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                sendMessage();
+                            }
+                        }}
                         placeholder="Ask the HomeEase assistant..."
                     />
                     <button
