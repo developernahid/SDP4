@@ -22,6 +22,7 @@ const AdminDashboardPage = () => {
         image: 'https://placehold.co/600x400/e2e8f0/334155?text=Service',
         price: 0,
     });
+    const [editingFeaturedId, setEditingFeaturedId] = useState(null);
 
     useEffect(() => {
         fetchServices();
@@ -112,11 +113,19 @@ const AdminDashboardPage = () => {
 
     const handleAddFeatured = () => {
         if (newFeatured.title && newFeatured.description) {
-            const nextId = formData.featured.length > 0 ? Math.max(...formData.featured.map(f => f.id)) + 1 : 1;
-            setFormData((prev) => ({
-                ...prev,
-                featured: [...prev.featured, { ...newFeatured, id: nextId }],
-            }));
+            if (editingFeaturedId !== null) {
+                setFormData((prev) => ({
+                    ...prev,
+                    featured: prev.featured.map((item) => item.id === editingFeaturedId ? { ...item, ...newFeatured } : item),
+                }));
+                setEditingFeaturedId(null);
+            } else {
+                const nextId = formData.featured.length > 0 ? Math.max(...formData.featured.map(f => f.id)) + 1 : 1;
+                setFormData((prev) => ({
+                    ...prev,
+                    featured: [...prev.featured, { ...newFeatured, id: nextId }],
+                }));
+            }
             setNewFeatured({
                 title: '',
                 description: '',
@@ -128,11 +137,30 @@ const AdminDashboardPage = () => {
         }
     };
 
+    const handleEditFeatured = (item) => {
+        setEditingFeaturedId(item.id);
+        setNewFeatured({
+            title: item.title,
+            description: item.description,
+            image: item.image,
+            price: item.price || 0,
+        });
+    };
+
     const handleRemoveFeatured = (idToRemove) => {
         setFormData((prev) => ({
             ...prev,
             featured: prev.featured.filter((item) => item.id !== idToRemove),
         }));
+        if (editingFeaturedId === idToRemove) {
+            setEditingFeaturedId(null);
+            setNewFeatured({
+                title: '',
+                description: '',
+                image: 'https://placehold.co/600x400/e2e8f0/334155?text=Service',
+                price: 0,
+            });
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -288,15 +316,24 @@ const AdminDashboardPage = () => {
                         <legend className={legendClasses}>Featured Services</legend>
                         <div className="space-y-2 mb-4">
                             {formData.featured.map((item) => (
-                                <div key={item.id} className="flex justify-between items-center p-2 border border-gray-200 rounded-md bg-gray-50">
+                                <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 p-2 border border-gray-200 rounded-md bg-gray-50">
                                     <span>{item.id}: {item.title} · ৳{item.price || 0}</span>
-                                    <button
-                                        type="button"
-                                        className={removeButtonClasses}
-                                        onClick={() => handleRemoveFeatured(item.id)}
-                                    >
-                                        Remove
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            className="py-1 px-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                                            onClick={() => handleEditFeatured(item)}
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={removeButtonClasses}
+                                            onClick={() => handleRemoveFeatured(item.id)}
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                             {formData.featured.length === 0 && (
@@ -350,8 +387,21 @@ const AdminDashboardPage = () => {
                                 />
                             </div>
                             <button type="button" className={buttonClasses} onClick={handleAddFeatured}>
-                                Add Featured Service
+                                {editingFeaturedId !== null ? 'Save featured service' : 'Add Featured Service'}
                             </button>
+                            {editingFeaturedId !== null && (
+                                <button type="button" className="ml-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" onClick={() => {
+                                    setEditingFeaturedId(null);
+                                    setNewFeatured({
+                                        title: '',
+                                        description: '',
+                                        image: 'https://placehold.co/600x400/e2e8f0/334155?text=Service',
+                                        price: 0,
+                                    });
+                                }}>
+                                    Cancel
+                                </button>
+                            )}
                         </div>
                     </fieldset>
 

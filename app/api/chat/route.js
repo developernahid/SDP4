@@ -2,14 +2,15 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import connect from '@/utils/db';
 import { ServiceCategory } from '@/Model/ServiceCategory';
+import { ChatSession } from '@/Model/ChatSession';
 
 export const runtime = 'nodejs';
 
 let lastInteractionId;
 
 const buildSystemPrompt = (serviceList) => `You are a customer support assistant for HomeEase, a home services platform.
-Use the website information and service list below to answer questions about services, pricing, booking, team, and contact.
-Available pages: Home, Services, Providers, About, Contact, Dashboard.
+Use the website information and service list below to answer questions about services, pricing, booking, team, providers, reviews, and contact.
+Available pages: Home, Services, Providers, About, Contact, Dashboard, Bookings, Reviews, Chat.
 Current services:
 ${serviceList}
 
@@ -26,7 +27,7 @@ const buildConversationText = (messages) =>
 
 export const POST = async (request) => {
     try {
-        const { messages } = await request.json();
+        const { name, messages } = await request.json();
 
         if (!Array.isArray(messages) || messages.length === 0) {
             return NextResponse.json({ message: 'Messages are required' }, { status: 400 });
@@ -59,6 +60,16 @@ export const POST = async (request) => {
 
             lastInteractionId = interaction.id;
             const reply = interaction.output_text || 'I could not generate a response at the moment.';
+            const updatedMessages = [...messages, { role: 'assistant', content: reply }];
+
+            if (name) {
+                await ChatSession.findOneAndUpdate(
+                    { name: name.trim() },
+                    { name: name.trim(), messages: updatedMessages },
+                    { upsert: true, new: true }
+                );
+            }
+
             return NextResponse.json({ reply }, { status: 200 });
         }
 
@@ -68,5 +79,26 @@ export const POST = async (request) => {
         console.error('Chat failed', error);
         const fallbackReply = 'The assistant is currently unavailable. Please try again in a moment.';
         return NextResponse.json({ reply: fallbackReply, message: error?.message || 'Chat failed' }, { status: 200 });
+    }
+};
+
+export const GET = async (request) => {
+    try {
+        await connect();
+        const { searchParams } = new URL(request.url);
+        const name = searchParams.get('name');
+        if (!name) {
+            return NextResponse.json({ message: 'Name is required' }, { status: 400 });
+        }
+
+        const session = await ChatSession.findOne({ name: name.trim() }).lean();
+        if (!session) {
+            return NextResponse.json({ messages: [] }, { status: 200 });
+        }
+
+        return NextResponse.json({ messages: session.messages }, { status: 200 });
+    } catch (error) {
+        console.error('Failed to load chat history', error);
+        return NextResponse.json({ message: 'Unable to load chat history' }, { status: 500 });
     }
 };

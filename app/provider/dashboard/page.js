@@ -167,10 +167,15 @@ export default function ProviderDashboardPage() {
                     <div className="space-y-3">
                         {bookings.length === 0 ? <p className="text-sm text-slate-500">No bookings yet.</p> : bookings.map((booking) => (
                             <div key={booking._id} className="rounded-2xl border p-4">
-                                <div className="flex items-start justify-between gap-3">
+                                <div className="flex flex-col gap-4">
                                     <div>
                                         <p className="font-semibold">{booking.service?.title || 'Service'}</p>
-                                        <p className="text-sm text-slate-500">{booking.name} • {booking.serviceDate} • {booking.serviceTime}</p>
+                                        <p className="text-sm text-slate-500">{booking.name} • {booking.email || 'No email'}</p>
+                                        <p className="text-sm text-slate-500">{booking.serviceDate || 'No date'} • {booking.serviceTime || 'No time'}</p>
+                                        <p className="text-sm text-slate-500">Location: {booking.location || 'N/A'}</p>
+                                        <p className="text-sm text-slate-500">Contact: {booking.contact || 'N/A'}</p>
+                                        <p className="text-sm text-slate-500">Comment: {booking.comment || 'None'}</p>
+                                        <p className="text-sm text-slate-500">Amount: {booking.amount ? `${booking.amount} BDT` : 'Contact for price'}</p>
                                         <p className="text-sm text-slate-500">Status: {booking.status}</p>
                                         <p className="text-sm text-slate-500">Payment: {booking.paymentStatus}</p>
                                     </div>
