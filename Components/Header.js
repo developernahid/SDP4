@@ -42,16 +42,17 @@ const Header = ({ user }) => {
 
                     <nav className="hidden items-center gap-7 lg:flex">
                         <Link href="/" onClick={() => handleActiveChange('/')} className={`text-sm font-medium transition-all ${isActive('/') ? 'rounded-full bg-violet-100 px-3 py-2 text-violet-700' : 'text-slate-600 hover:text-violet-600'}`}>Home</Link>
-                        <Link href="/services" onClick={() => handleActiveChange('/services')} className={`text-sm font-medium transition-all ${isActive('/services') ? 'rounded-full bg-violet-100 px-3 py-2 text-violet-700' : 'text-slate-600 hover:text-violet-600'}`}>Services</Link>
-                        <Link href="/providers" onClick={() => handleActiveChange('/providers')} className={`text-sm font-medium transition-all ${isActive('/providers') ? 'rounded-full bg-violet-100 px-3 py-2 text-violet-700' : 'text-slate-600 hover:text-violet-600'}`}>Providers</Link>
-                        <Link href="/about" onClick={() => handleActiveChange('/about')} className={`text-sm font-medium transition-all ${isActive('/about') ? 'rounded-full bg-violet-100 px-3 py-2 text-violet-700' : 'text-slate-600 hover:text-violet-600'}`}>About</Link>
-                        <Link href="/contact" onClick={() => handleActiveChange('/contact')} className={`text-sm font-medium transition-all ${isActive('/contact') ? 'rounded-full bg-violet-100 px-3 py-2 text-violet-700' : 'text-slate-600 hover:text-violet-600'}`}>Contact</Link>
-                        {!loading && user && (
+                            {!loading && user && (
                             <>
                                 <Link href="/dashboard" onClick={() => handleActiveChange('/dashboard')} className={`text-sm font-medium transition-all ${isActive('/dashboard') ? 'rounded-full bg-violet-100 px-3 py-2 text-violet-700' : 'text-slate-600 hover:text-violet-600'}`}>Dashboard</Link>
                                 {user.role === 'provider' && <Link href="/provider/dashboard" onClick={() => handleActiveChange('/provider/dashboard')} className={`text-sm font-medium transition-all ${isActive('/provider/dashboard') ? 'rounded-full bg-violet-100 px-3 py-2 text-violet-700' : 'text-slate-600 hover:text-violet-600'}`}>Provider</Link>}
                             </>
                         )}
+                        <Link href="/services" onClick={() => handleActiveChange('/services')} className={`text-sm font-medium transition-all ${isActive('/services') ? 'rounded-full bg-violet-100 px-3 py-2 text-violet-700' : 'text-slate-600 hover:text-violet-600'}`}>Services</Link>
+                        <Link href="/providers" onClick={() => handleActiveChange('/providers')} className={`text-sm font-medium transition-all ${isActive('/providers') ? 'rounded-full bg-violet-100 px-3 py-2 text-violet-700' : 'text-slate-600 hover:text-violet-600'}`}>Providers</Link>
+                        <Link href="/about" onClick={() => handleActiveChange('/about')} className={`text-sm font-medium transition-all ${isActive('/about') ? 'rounded-full bg-violet-100 px-3 py-2 text-violet-700' : 'text-slate-600 hover:text-violet-600'}`}>About</Link>
+                        <Link href="/contact" onClick={() => handleActiveChange('/contact')} className={`text-sm font-medium transition-all ${isActive('/contact') ? 'rounded-full bg-violet-100 px-3 py-2 text-violet-700' : 'text-slate-600 hover:text-violet-600'}`}>Contact</Link>
+                    
                     </nav>
 
                     {!loading && (
