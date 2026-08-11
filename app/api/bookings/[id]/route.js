@@ -1,7 +1,9 @@
 import { BookedService } from '@/Model/BookedService';
 import { Provider } from '@/Model/Provider';
 import { Transaction } from '@/Model/Transaction';
+import { Product } from '@/Model/Product';
 import connect from '@/utils/db';
+import mongoose from 'mongoose';
 import { NextResponse } from 'next/server';
 
 export const GET = async (req, { params }) => {
@@ -51,10 +53,26 @@ export const PUT = async (req, { params }) => {
             return NextResponse.json({ message: 'Booking not found' }, { status: 404 });
         }
 
+        const previousStatus = booking.status;
+
         const updateData = { ...body };
         if (body.status) updateData.status = body.status;
         if (body.paymentStatus) updateData.paymentStatus = body.paymentStatus;
-        if (body.amount) updateData.amount = body.amount;
+        // Fetch original service price instead of using request amount
+        if (booking.service?.id) {
+            const serviceId = booking.service.id;
+            let product = null;
+            if (mongoose.Types.ObjectId.isValid(serviceId)) {
+                product = await Product.findById(serviceId).catch(() => null);
+            } else {
+                // fallback: try searching by SKU or other unique string fields
+                product = await Product.findOne({ sku: serviceId }).catch(() => null);
+            }
+
+            if (product) {
+                updateData.amount = product.price || product.originalPrice || 0;
+            }
+        }
         if (body.transactionId) updateData.transactionId = body.transactionId;
         if (body.customerId) updateData.customerId = body.customerId;
         if (body.providerId) updateData.providerId = body.providerId;
@@ -65,16 +83,17 @@ export const PUT = async (req, { params }) => {
 
         Object.assign(booking, updateData);
 
-        if (body.paymentStatus === 'Paid' && booking.providerId) {
+        const shouldCreateTransaction = booking.paymentStatus === 'Paid' && booking.providerId && !booking.transactionId;
+        if (shouldCreateTransaction) {
             const provider = await Provider.findById(booking.providerId);
             if (provider) {
-                const amount = Number(body.amount || booking.amount || 0);
-                const adminCommission = Number((amount * 0.1).toFixed(2));
-                const providerAmount = Number((amount - adminCommission).toFixed(2));
+                const amount = Number(booking.amount || 0);
+                const providerAmount = Number(amount.toFixed(2));
 
                 provider.walletBalance = Number(provider.walletBalance || 0) + providerAmount;
                 await provider.save();
 
+                const adminCommission = Number((amount - providerAmount).toFixed(2)) || 0;
                 const transaction = await Transaction.create({
                     bookingId: booking._id,
                     providerId: provider._id,
@@ -82,19 +101,19 @@ export const PUT = async (req, { params }) => {
                     amount,
                     providerAmount,
                     adminCommission,
-                    paymentMethod: 'Demo Wallet',
+                    paymentMethod: 'Cash Wallet',
                     status: 'Completed',
-                    description: `Demo payment for ${booking.service?.title || 'service'}`,
+                    description: `Payment for ${booking.service?.title || 'service'}`,
                 });
 
                 booking.transactionId = transaction._id.toString();
-                booking.adminCommission = adminCommission;
                 booking.providerAmount = providerAmount;
+                booking.adminCommission = adminCommission;
                 booking.paidAt = new Date();
             }
         }
 
-        if (body.status === 'Completed' && booking.providerId && booking.status !== 'Completed') {
+        if (body.status === 'Completed' && booking.providerId && previousStatus !== 'Completed') {
             const provider = await Provider.findById(booking.providerId);
             if (provider) {
                 provider.completedJobs = (provider.completedJobs || 0) + 1;

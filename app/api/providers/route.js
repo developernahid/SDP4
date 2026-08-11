@@ -30,11 +30,13 @@ export const GET = async (request) => {
             ];
         }
 
-        if (category) query.serviceCategory = { $regex: category, $options: 'i' };
-        if (location) query.city = { $regex: location, $options: 'i' };
-        if (minRating) query.rating = { $gte: minRating };
-
-        if (category) query.serviceCategory = { $regex: category, $options: 'i' };
+        if (category) {
+            if (category === 'AC Services') {
+                query.serviceCategory = { $regex: 'AC Services|AC Repair | ac', $options: 'i' };
+            } else {
+                query.serviceCategory = { $regex: category, $options: 'i' };
+            }
+        }
         if (location) query.city = { $regex: location, $options: 'i' };
         if (minRating) query.rating = { $gte: minRating };
 

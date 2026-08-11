@@ -1,24 +1,50 @@
 import { BookedService } from '@/Model/BookedService';
 import { Provider } from '@/Model/Provider';
 import { Transaction } from '@/Model/Transaction';
+import { Product } from '@/Model/Product';
 import connect from '@/utils/db';
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
+import { withAuth } from '@/middleware/withAuth';
 
-export const POST = async (req) => {
+export const POST = withAuth(async (req) => {
     try {
         await connect();
         const data = await req.json();
+        const user = req.user;
+
+        let serviceObj = {
+            id: data.serviceId || 'service',
+            title: data.serviceTitle || 'Service',
+            description: data.description || 'Home service booking',
+            image: data.image || 'https://placehold.co/600x400',
+            price: data.price || 0,
+        };
+
+        // If a serviceId is provided and looks like an ObjectId, try to populate from Product
+        if (data.serviceId) {
+            if (mongoose.Types.ObjectId.isValid(data.serviceId)) {
+                const prod = await Product.findById(data.serviceId).catch(() => null);
+                if (prod) {
+                    serviceObj = {
+                        id: prod._id.toString(),
+                        title: prod.name || data.serviceTitle || 'Service',
+                        description: prod.description || data.description || 'Home service booking',
+                        image: (prod.images && prod.images[0] && prod.images[0].url) || data.image || 'https://placehold.co/600x400',
+                        price: prod.price || data.price || 0,
+                    };
+                }
+            } else {
+                // keep provided id as-is (e.g., numeric or SKU)
+                serviceObj.id = data.serviceId;
+            }
+        }
 
         const bookingPayload = {
-            service: data.service || {
-                id: data.serviceId || 'service',
-                title: data.serviceTitle || 'Service',
-                description: data.description || 'Home service booking',
-                image: data.image || 'https://placehold.co/600x400',
-                price: data.price || 0,
-            },
-            name: data.name || data.customerName || '',
-            email: data.email || data.customerEmail || '',
+            service: data.service || serviceObj,
+            name: user?.username || data.name || data.customerName || '',
+            email: user?.email || data.email || data.customerEmail || '',
+            customerId: user?._id?.toString() || data.customerId || '',
             location: data.location || '',
             contact: data.contact || '',
             comment: data.comment || '',
@@ -27,7 +53,7 @@ export const POST = async (req) => {
             category: data.category || '',
             serviceDate: data.serviceDate || '',
             serviceTime: data.serviceTime || '',
-            amount: data.amount || data.service?.price || data.price || 0,
+            amount: data.amount || data.service?.price || serviceObj.price || data.price || 0,
             paymentStatus: data.paymentStatus || 'Pending',
             status: data.status || 'Pending',
             transactionId: data.transactionId || '',
@@ -39,7 +65,7 @@ export const POST = async (req) => {
         console.error('Failed to create booking:', err);
         return NextResponse.json({ message: 'Booking failed', error: err.message || err }, { status: 500 });
     }
-};
+});
 
 export const GET = async (req) => {
     try {

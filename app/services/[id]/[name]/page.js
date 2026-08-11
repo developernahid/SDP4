@@ -62,6 +62,11 @@ const DetailsPage = ({ params }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!user) {
+            alert('Please login to book service.');
+            return;
+        }
+
         const bookedData = {
             service: data,
             name: form.name,
@@ -167,10 +172,16 @@ const DetailsPage = ({ params }) => {
                                     <div className="mt-6">
                                         <button
                                             type="button"
-                                            onClick={() => setShowModal(true)}
+                                            onClick={() => {
+                                                if (!user) {
+                                                    window.location.href = '/login';
+                                                    return;
+                                                }
+                                                setShowModal(true);
+                                            }}
                                             className="inline-block w-full text-center py-3 px-4 rounded-lg bg-violet-600 text-white font-medium text-sm hover:bg-violet-700 transition-colors"
                                         >
-                                            Book Now
+                                            {user ? 'Book Now' : 'Login to Book'}
                                         </button>
                                         <button
                                             type="button"

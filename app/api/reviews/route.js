@@ -20,7 +20,12 @@ export const POST = async (request) => {
             return NextResponse.json({ message: 'Only completed bookings can be rated' }, { status: 400 });
         }
 
-        const provider = await Provider.findById(providerId).populate('userId', 'email');
+        const resolvedProviderId = providerId || booking.providerId;
+        if (!resolvedProviderId) {
+            return NextResponse.json({ message: 'Provider ID is required to submit a review' }, { status: 400 });
+        }
+
+        const provider = await Provider.findById(resolvedProviderId).populate('userId', 'email');
         if (!provider) {
             return NextResponse.json({ message: 'Provider not found' }, { status: 404 });
         }
@@ -30,8 +35,10 @@ export const POST = async (request) => {
             return NextResponse.json({ message: 'Booking already reviewed' }, { status: 400 });
         }
 
-        const total = provider.rating * provider.reviewCount;
-        const nextCount = provider.reviewCount + 1;
+        const currentRating = Number(provider.rating || 0);
+        const currentReviewCount = Number(provider.reviewCount || 0);
+        const total = currentRating * currentReviewCount;
+        const nextCount = currentReviewCount + 1;
         provider.rating = Number(((total + Number(rating)) / nextCount).toFixed(1));
         provider.reviewCount = nextCount;
         await provider.save();

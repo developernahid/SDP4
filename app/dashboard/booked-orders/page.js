@@ -76,7 +76,7 @@ const BookedOrdersPage = () => {
         try {
             const providerId = providerSelection[bookingId];
             const payload = { status: newStatus };
-            if (newStatus === 'Approved' && providerId) {
+            if (providerId) {
                 const provider = providers.find((item) => item._id === providerId);
                 if (provider) {
                     payload.providerId = providerId;

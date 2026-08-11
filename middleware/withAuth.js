@@ -1,13 +1,17 @@
 
 import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { User } from "@/Model/User";
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-super-secret-key-change-me');
 
 export function withAuth(handler) {
     return async function (req, { params }) {
-        const token = req.headers.get("authorization")?.split(" ")[1];
+        const tokenHeader = req.headers.get("authorization")?.split(" ")[1];
+        const cookieStore = await cookies();
+        const tokenCookie = cookieStore.get('session_token')?.value;
+        const token = tokenHeader || tokenCookie;
 
         if (!token) {
             return NextResponse.json(
@@ -17,7 +21,7 @@ export function withAuth(handler) {
         }
 
         try {
-            const { payload } = await jwtVerify(token, secret);
+            const { payload } = await jwtVerify(token, JWT_SECRET);
             // Normalize payload.userId in case it's a binary/Object form
             let userId = payload.userId;
             if (userId && typeof userId === 'object') {

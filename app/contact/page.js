@@ -48,7 +48,7 @@ const ContactPage = () => {
 
     const contactInfo = [
         { icon: '📧', title: 'Email', detail: 'homeease@gmail.com', href: 'mailto:homeease@gmail.com' },
-        { icon: '📱', title: 'Phone', detail: '+88 01868 260224', href: 'tel:+8801868260224' },
+        { icon: '📱', title: 'Phone', detail: '+882345677', href: 'tel:+8801868260224' },
         { icon: '📍', title: 'Address', detail: 'Dhaka, Bangladesh', href: '#' },
         { icon: '⏰', title: 'Hours', detail: '24/7 Support', href: '#' },
     ];
